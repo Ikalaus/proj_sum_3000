@@ -243,7 +243,7 @@ def open_gui():
     root = tk.Tk()   
     root.title("Project Summarizer")
 
-    version = "1.0"
+    version = "1.1"
 
     # Set the Tkinter theme before creating any widgets
     s = ttk.Style()
