@@ -243,6 +243,8 @@ def open_gui():
     root = tk.Tk()   
     root.title("Project Summarizer")
 
+    version = "1.0"
+
     # Set the Tkinter theme before creating any widgets
     s = ttk.Style()
     s.theme_use('clam')  
@@ -250,6 +252,9 @@ def open_gui():
     # Create and position the label and combobox for CSV file selection
     csv_label = tk.Label(root, text="Select a CSV file:")
     csv_label.pack()
+
+    version_label = tk.Label(root, text=f"Version: {version}")
+    version_label.pack()
 
     csv_files = [file.stem for file in current_directory.glob("*.csv")]
     csv_combo = ttk.Combobox(root, values=csv_files)
