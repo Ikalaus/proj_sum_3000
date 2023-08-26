@@ -245,7 +245,7 @@ def open_gui():
 
     # Set the Tkinter theme before creating any widgets
     s = ttk.Style()
-    s.theme_use('default')  
+    s.theme_use('clam')  
 
     # Create and position the label and combobox for CSV file selection
     csv_label = tk.Label(root, text="Select a CSV file:")
