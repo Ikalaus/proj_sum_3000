@@ -259,7 +259,7 @@ def open_gui():
     root = tk.Tk()
     root.title("Project Summarizer")
 
-    version = "1.2.1"
+    version = "1.2.2"
 
     s = ttk.Style()
     s.theme_use('clam')
