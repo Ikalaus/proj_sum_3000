@@ -1,12 +1,18 @@
-import csv
-import re
-from datetime import date 
 import tkinter as tk
-from tkinter import messagebox, scrolledtext, ttk
-from pathlib import Path  
-
+from tkinter import messagebox, scrolledtext, ttk, filedialog
+from pathlib import Path
+import os
+import re
+import csv
+from datetime import date
 
 today = date.today()
+csv_combo = None  
+
+def change_directory():
+    selected_directory = filedialog.askdirectory()
+    if selected_directory:
+        os.chdir(selected_directory)
 
 def extract_numeric_value(value, delimiter):
     match = re.search(rf"(\d+)\s*{re.escape(delimiter)}(\s*A)?", value, re.IGNORECASE)
@@ -20,9 +26,6 @@ def read_csv_to_dict(csv_file_path):
         for row in reader:
             data.append(row)
     return data
-
-
-
 
 def analyze_columns(data):
     zeros = (0, ) * 19
@@ -118,8 +121,21 @@ def check_spans(data):
     
     return False 
 
+def logo_click(result_text_widget, csv_combo_widget):
+    selected_directory = filedialog.askdirectory()  # Open a directory selection dialog
 
+    if selected_directory:
+        global current_directory, csv_files
+        current_directory = Path(selected_directory)
+        
+        result_text_widget.configure(state="normal")
+        result_text_widget.delete(1.0, tk.END)
+        result_text_widget.insert(tk.END, f"Current Directory: {current_directory}\n")
+        result_text_widget.configure(state="disabled")
 
+        # Update the list of available CSV files
+        csv_files = [file.stem for file in current_directory.glob("*.csv")]
+        csv_combo_widget["values"] = csv_files
 
 def open_gui():
     def run_script():
@@ -240,41 +256,45 @@ def open_gui():
         csv_files = [file.stem for file in current_directory.glob("*.csv")]
         csv_combo["values"] = csv_files
 
-    root = tk.Tk()   
+    root = tk.Tk()
     root.title("Project Summarizer")
 
-    version = "1.1"
+    version = "1.2"
 
-    # Set the Tkinter theme before creating any widgets
     s = ttk.Style()
-    s.theme_use('clam')  
+    s.theme_use('clam')
 
-    # Create and position the label and combobox for CSV file selection
-    csv_label = tk.Label(root, text="Select a CSV file:")
+    version_label = tk.Label(root, text=f"Version: {version}\n")
+    version_label.pack()
+   
+    csv_label = tk.Label(root, text="Select the Folder with your CSV files:")
+    csv_label.pack()
+    
+    canvas = tk.Canvas(root, width=200, height=20)
+    canvas.pack()
+
+    # change dir
+    change_dir_button = tk.Button(canvas, text="Change Directory", command=lambda: logo_click(result_text, csv_combo))
+    change_dir_button.pack()
+
+    csv_label = tk.Label(root, text="\nSelect a CSV file:")
     csv_label.pack()
 
-    version_label = tk.Label(root, text=f"Version: {version}")
-    version_label.pack()
-
-    csv_files = [file.stem for file in current_directory.glob("*.csv")]
+    global csv_combo  # Declare csv_combo as a global variable
     csv_combo = ttk.Combobox(root, values=csv_files)
     csv_combo.pack()
 
-    # Create a frame for the buttons
     button_frame = tk.Frame(root)
     button_frame.pack(side="top", padx=10, pady=5)
 
-    # Create and position the "Run Script" button in the button frame
     run_button = tk.Button(button_frame, text="Run Script", command=run_script)
     run_button.pack(side="left", padx=5)
 
-    # Create and position the "Reset" button in the button frame
     reset_button = tk.Button(button_frame, text="Reset", command=reset)
     reset_button.pack(side="left", padx=5)
 
-    # Create and position the result text area
     result_text = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=80, height=30)
-    result_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)  # Fill and expand to fit available space
+    result_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
     root.mainloop()
 
@@ -282,7 +302,6 @@ if __name__ == '__main__':
     current_directory = Path.cwd()
     print("Current working directory:", current_directory)
 
-    # Get the list of CSV file names in the current directory using pathlib
     csv_files = [file.stem for file in current_directory.glob("*.csv")]
 
     open_gui()
