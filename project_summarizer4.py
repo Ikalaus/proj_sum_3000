@@ -45,6 +45,7 @@ def analyze_columns(data):
     for row in data:
         subj = row.get('Subject', '')
         comments = row.get('Comments', '')
+        color = row.get('Color', '')
 
         value_a1 = extract_numeric_value(comments, "'A")
         value_a2 = extract_numeric_value(comments, "' A")
@@ -58,7 +59,7 @@ def analyze_columns(data):
         total_rows = len(data)
             
 
-        value_rc += 1 if re.search(r"\brc\b", subj, re.IGNORECASE) else 0
+        value_rc += 1 if re.search(r"#00FFFF", color, re.IGNORECASE) else 0
         count_p += 1 if re.search(r"[ ]*P\"[ ]*", comments, re.IGNORECASE) else 0        
         count_r_plus += 1 if re.search(r"[ ]*R\+[ ]*", comments, re.IGNORECASE) else 0
         count_c_star += 1 if re.search(r"[ ]*C\*[ ]*", comments, re.IGNORECASE) else 0
@@ -259,7 +260,7 @@ def open_gui():
     root = tk.Tk()
     root.title("Project Summarizer")
 
-    version = "1.2.2"
+    version = "1.3"
 
     s = ttk.Style()
     s.theme_use('clam')
