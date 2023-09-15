@@ -71,7 +71,7 @@ def analyze_columns(data):
         count_power += 1 if re.search(r"\bpower\b", subj, re.IGNORECASE) else 0
         count_le += 1 if re.search(r"[ ]*\#LE[ ]*", comments, re.IGNORECASE) else 0
         count_amp += 1 if re.search(r"[ ]*\#AMP[ ]*", comments, re.IGNORECASE) else 0  
-        count_drop += 1 if re.search(r"\bdrop\b", subj, re.IGNORECASE) else 0
+        count_drop += 1 if re.search(r"drop", subj, re.IGNORECASE) else 0
 
 
 
@@ -122,6 +122,12 @@ def check_spans(data):
     
     return False 
 
+def check_sequence_column(data):
+    return any('Sequence' in row for row in data)
+
+def check_sequence_values(data):
+    return any(row.get('Sequence') for row in data if 'Sequence' in row and row['Sequence'])
+
 def logo_click(result_text_widget, csv_combo_widget):
     selected_directory = filedialog.askdirectory()  # Open a directory selection dialog
 
@@ -134,9 +140,8 @@ def logo_click(result_text_widget, csv_combo_widget):
         result_text_widget.insert(tk.END, f"Current Directory: {current_directory}\n")
         result_text_widget.configure(state="disabled")
 
-        # Update the list of available CSV files
-        csv_files = [file.stem for file in current_directory.glob("*.csv")]
-        csv_combo_widget["values"] = csv_files
+        result_text_widget.configure(state="normal")
+
 
 def open_gui():
     def run_script():
@@ -157,9 +162,10 @@ def open_gui():
             
             allsum = sum_a + sum_u 
             
-            output_text = f"\n"
-            output_text += f"Project Summary for {csv_name.upper()}\n"
-            output_text += f"Today's Date: {today.strftime('%Y-%m-%d')}\n\n"
+            
+            output_text = f"Project Summary for {csv_name.upper()}"
+            remaining_spaces = 100 - len("Project Summary for {csv_name.upper()}")
+            output_text += f"Today's Date: {today.strftime('%Y-%m-%d')}\n\n".rjust(remaining_spaces)
             output_text += f"Total Markups: {total_rows}\n"
             output_text += f"Total Markups/Mile: {(total_rows/allsum)*5280}\n\n"
             
@@ -184,12 +190,25 @@ def open_gui():
             output_text += f"EoL: {max_e_number}\n\n"
             
             output_text += f"MFG's in this Job: {unique_values}\n"
-            output_text += f"Total Drops(Should equal the total lots - VL): {count_drops}\n\n"
+            output_text += f"Total Drops: {count_drops}\nTotal lots - VL: {sum_lots - count_vl}\n\n"
+        
+            if check_sequence_column(data):
+                if check_sequence_values(data):
+                    # Case where "Sequence" column exists and has non-empty values
+                    output_text += f"Sequences found in Job please double check!\n"
+                    # Add your code specific to this case here
+
+                else:
+                    # Case where "Sequence" column exists but has only blanks
+                    output_text += f"Sequence column exists and no sequences found. Nice.\n"
+
+            else:
+                output_text += f"Missing sequence column, please add this to your markup list.\n"
         
             if count_power < 1:
-                output_text += f"No Power Supplies in job. Please make sure there is a viable way for this Node to get power!\n"
+                output_text += f"\nNo Power Supplies in job. Please make sure there is a viable way for this Node to get power!\n"
             else:
-                output_text += f"Power Supplies: {count_power}. Nice.\n"
+                output_text += f"\nPower Supplies: {count_power}. Nice.\n\n"
 
                 
             if check_spans(data):
@@ -208,18 +227,18 @@ def open_gui():
                     output_text += "Some spans are missing apostrophes, please double check these spans:\n"
                     for row in missing_apostrophe_rows:
                         comments_value = row.get('Comments', '')
-                        output_text += f"'Comments': '{comments_value}'\n"
+                        output_text += f"'{comments_value}'\n"
                 
                 if missing_000_rows:
                     output_text += "Some spans have '000' in their comments:\n"
                     for row in missing_000_rows:
                         comments_value = row.get('Comments', '')
-                        output_text += f"'Comments': '{comments_value}'\n"
+                        output_text += f"'{comments_value}'\n"
                 
                 if not missing_apostrophe_rows and not missing_000_rows:
-                    output_text += "All spans have an apostrophe. Nice.\n"
+                    output_text += "All spans have an apostrophe. Nice.\n\n"
             else:
-                output_text += "All spans are good. Nice.\n"
+                output_text += "All spans are good. Nice.\n\n"
                     
             if check_text_box(data):
                 text_box_rows = [row for row in data if re.search(r"\btext box\b", row.get('Subject', ''), re.IGNORECASE)]
@@ -231,14 +250,16 @@ def open_gui():
                         remaining_text_box_rows.append(row)
                 
                 if remaining_text_box_rows:
-                    output_text += "Some text boxes are still unsorted, please make sure they are not important:\n"
+                    output_text += "\nSome text boxes are still unsorted, please make sure they are not important:\n"
                     for row in remaining_text_box_rows:
                         comments_value = row.get('Comments', '')
-                        output_text += f"'Comments': '{comments_value}'\n"
+                        output_text += f"'{comments_value}'\n"
                 else:
-                    output_text += "All text boxes are complete. Nice.\n"
+                    output_text += "\nAll text boxes are complete. Nice.\n"
             else:
-                output_text += "No text boxes found. Nice.\n"
+                output_text += "\nNo text boxes found. Nice.\n"
+                
+            output_text += "\nTN drops should be BLUE\nMA drops should be RED\n"
 
             result_text.configure(state="normal")  # Set to normal to insert text
             result_text.delete(1.0, tk.END)  # Clear previous results
@@ -260,7 +281,7 @@ def open_gui():
     root = tk.Tk()
     root.title("Project Summarizer")
 
-    version = "1.3"
+    version = "1.4"
 
     s = ttk.Style()
     s.theme_use('clam')
@@ -271,7 +292,8 @@ def open_gui():
     csv_label = tk.Label(root, text="Select the Folder with your CSV files:")
     csv_label.pack()
     
-    canvas = tk.Canvas(root, width=200, height=20)
+    root.geometry("750x950")
+    canvas = tk.Canvas(root, width=200, height=50)
     canvas.pack()
 
     # change dir
