@@ -71,7 +71,7 @@ def analyze_columns(data):
         count_power += 1 if re.search(r"\bpower\b", subj, re.IGNORECASE) else 0
         count_le += 1 if re.search(r"[ ]*\#LE[ ]*", comments, re.IGNORECASE) else 0
         count_amp += 1 if re.search(r"[ ]*\#AMP[ ]*", comments, re.IGNORECASE) else 0  
-        count_drop += 1 if re.search(r"drop", subj, re.IGNORECASE) else 0
+        count_drop += 1 if re.search(r"^drop$", subj, re.IGNORECASE) else 0
 
 
 
@@ -281,7 +281,7 @@ def open_gui():
     root = tk.Tk()
     root.title("Project Summarizer")
 
-    version = "1.4"
+    version = "1.4.1"
 
     s = ttk.Style()
     s.theme_use('clam')
