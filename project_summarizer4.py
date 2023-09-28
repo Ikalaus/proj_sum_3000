@@ -61,11 +61,11 @@ def analyze_columns(data):
 
         value_rc += 1 if re.search(r"#00FFFF", color, re.IGNORECASE) else 0
         count_p += 1 if re.search(r"[ ]*P\"[ ]*", comments, re.IGNORECASE) else 0        
-        count_r_plus += 1 if re.search(r"[ ]*R\+[ ]*", comments, re.IGNORECASE) else 0
-        count_c_star += 1 if re.search(r"[ ]*C\*[ ]*", comments, re.IGNORECASE) else 0
-        count_mdu += 1 if re.search(r"\bmdu\b", comments, re.IGNORECASE) else 0
-        count_g_star += 1 if re.search(r"[ ]*G\*[ ]*", comments, re.IGNORECASE) else 0
-        count_vl += 1 if re.search(r"\bvl\b", comments, re.IGNORECASE) else 0
+        count_r_plus += 1 if re.search(r"^[ ]*R\+[ ]*$", comments, re.IGNORECASE) else 0
+        count_c_star += 1 if re.search(r"^[ ]*C\*[ ]*$", comments, re.IGNORECASE) else 0
+        count_mdu += 1 if re.search(r"^[ ]*mdu\%[ ]*$", comments, re.IGNORECASE) else 0
+        count_g_star += 1 if re.search(r"^[ ]*G\*[ ]*$", comments, re.IGNORECASE) else 0
+        count_vl += 1 if re.search(r"\bVL\b", comments, re.IGNORECASE) else 0
         count_image += 1 if re.search(r"\bimage\b", subj, re.IGNORECASE) else 0
         count_tapfaded += 1 if re.search(r"\btap faded\b", subj, re.IGNORECASE) else 0
         count_power += 1 if re.search(r"\bpower\b", subj, re.IGNORECASE) else 0
@@ -194,21 +194,23 @@ def open_gui():
         
             if check_sequence_column(data):
                 if check_sequence_values(data):
-                    # Case where "Sequence" column exists and has non-empty values
                     output_text += f"Sequences found in Job please double check!\n"
-                    # Add your code specific to this case here
-
                 else:
-                    # Case where "Sequence" column exists but has only blanks
                     output_text += f"Sequence column exists and no sequences found. Nice.\n"
-
             else:
                 output_text += f"Missing sequence column, please add this to your markup list.\n"
+
+
+            if check_groups(data):
+                output_text += f"Groups found, please sort these"
+            else:
+                output_text += f"No Groups found. Nice."
+            
         
             if count_power < 1:
                 output_text += f"\nNo Power Supplies in job. Please make sure there is a viable way for this Node to get power!\n"
             else:
-                output_text += f"\nPower Supplies: {count_power}. Nice.\n\n"
+                output_text += f"\nPower Supplies: {count_power}. Nice.\n"
 
                 
             if check_spans(data):
@@ -236,9 +238,9 @@ def open_gui():
                         output_text += f"'{comments_value}'\n"
                 
                 if not missing_apostrophe_rows and not missing_000_rows:
-                    output_text += "All spans have an apostrophe. Nice.\n\n"
+                    output_text += "All spans have an apostrophe. Nice.\n"
             else:
-                output_text += "All spans are good. Nice.\n\n"
+                output_text += "All spans are good. Nice.\n"
                     
             if check_text_box(data):
                 text_box_rows = [row for row in data if re.search(r"\btext box\b", row.get('Subject', ''), re.IGNORECASE)]
@@ -281,7 +283,7 @@ def open_gui():
     root = tk.Tk()
     root.title("Project Summarizer")
 
-    version = "1.4.1"
+    version = "1.5"
 
     s = ttk.Style()
     s.theme_use('clam')
